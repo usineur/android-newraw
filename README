@@ -1,5 +1,10 @@
-To summarize: you have to download pelya awesome GIT repo from https://github.com/pelya/commandergenius,
-then install Android SDK 2.2, NDK r4b, and "ant" tool, then you should launch commands:
+First, many thanks to Gregory Montoir for his original work.
+
+Then, you have to download pelya awesome commandergenius software.
+(GIT repo: https://github.com/pelya/commandergenius ).
+You need to install Android SDK 2.2, NDK r4b, and "ant" tool.
+
+Now you are ready. Launch following commands:
 	cd project/jni/application
 	rm src
 	place android-newraw GIT in this directory
@@ -8,4 +13,10 @@ then install Android SDK 2.2, NDK r4b, and "ant" tool, then you should launch co
 	cd ..
 	sh build.sh
 
-Many thanks also to Gregory Montoir for his original works
+You should also edit AndroidAppSettings.cfg and replace the link
+in the AppDataDownloadUrl item with a valid url to a zip archive
+to original game files. Archive structure must be:
+	en/
+	en/bank01
+	en/bank02
+	...
