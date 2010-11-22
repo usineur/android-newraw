@@ -1,10 +1,10 @@
 To summarize: you have to download pelya awesome GIT repo from https://github.com/pelya/commandergenius,
 then install Android SDK 2.2, NDK r4b, and "ant" tool, then you should launch commands:
 	cd project/jni/application
-    rm src
+	rm src
 	place android-newraw GIT in this directory
-    ln -s android-newraw src
-    cd ../.. && android update project -p .
+	ln -s android-newraw src
+	cd ../.. && android update project -p .
 	cd ..
 	sh build.sh
 
