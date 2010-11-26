@@ -12,11 +12,3 @@ Now you are ready. Launch following commands:
 	cd ../.. && android update project -p .
 	cd ..
 	sh build.sh
-
-You should also edit AndroidAppSettings.cfg and replace the link
-in the AppDataDownloadUrl item with a valid url to a zip archive
-to original game files. Archive structure must be:
-	en/
-	en/bank01
-	en/bank02
-	...
