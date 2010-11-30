@@ -4,11 +4,12 @@ Then, you have to download pelya awesome commandergenius software.
 (GIT repo: https://github.com/pelya/commandergenius ).
 You need to install Android SDK 2.2, NDK r4b, and "ant" tool.
 
-Now you are ready. Launch following commands:
+NewRAW is now part of commandergenuis as submodule
+Lauch following commands in commandergenius GIT:
+	git submodule update --init
 	cd project/jni/application
 	rm src
-	place android-newraw GIT in this directory
-	ln -s android-newraw src
+	ln -s NewRAW src
 	cd ../.. && android update project -p .
-	cd ..
-	sh build.sh
+    cd ..
+    sh build.sh
