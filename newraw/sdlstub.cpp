@@ -187,18 +187,20 @@ void SDLStub::processEvents() {
 					_pi.quit = true;
 				}
 				break;
-			} else if (ev.key.keysym.mod & KMOD_CTRL) {
-				if (ev.key.keysym.sym == SDLK_s) {
-					_pi.save = true;
-				} else if (ev.key.keysym.sym == SDLK_l) {
-					_pi.load = true;
-				} else if (ev.key.keysym.sym == SDLK_f) {
-					_pi.fastMode = true;
-				} else if (ev.key.keysym.sym == SDLK_KP_PLUS) {
-					_pi.stateSlot = 1;
-				} else if (ev.key.keysym.sym == SDLK_KP_MINUS) {
-					_pi.stateSlot = -1;
-				}
+			} else if (ev.key.keysym.sym == SDLK_s) {
+				_pi.save = true;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_l) {
+				_pi.load = true;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_f) {
+				_pi.fastMode = true;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_KP_PLUS) {
+				_pi.stateSlot = 1;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_KP_MINUS) {
+				_pi.stateSlot = -1;
 				break;
 			}
 			_pi.lastChar = ev.key.keysym.sym;
