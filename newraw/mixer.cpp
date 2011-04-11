@@ -21,15 +21,14 @@
 #include "systemstub.h"
 
 
-static int8 addclamp(int a, int b) {
+static int16 addclamp(int a, int b) {
 	int add = a + b;
-	if (add < -128) {
-		add = -128;
+	if (add < -32767) {
+		add = -32767;
+	} else if (add > 32767) {
+		add = 32767;
 	}
-	else if (add > 127) {
-		add = 127;
-	}
-	return (int8)add;
+	return (int16)add;
 }
 
 Mixer::Mixer(SystemStub *stub) 
@@ -82,13 +81,15 @@ void Mixer::stopAll() {
 	}
 }
 
-void Mixer::mix(int8 *buf, int len) {
+void Mixer::mix(int8 *buf1, int len) {
+	int16 *buf = (int16 *)buf1;
 	MutexStack(_stub, _mutex);
 	memset(buf, 0, len);
+	len /= 2;
 	for (uint8 i = 0; i < NUM_CHANNELS; ++i) {
 		MixerChannel *ch = &_channels[i];
 		if (ch->active) {
-			int8 *pBuf = buf;
+			int16 *pBuf = buf;
 			for (int j = 0; j < len; ++j, ++pBuf) {
 				uint16 p1, p2;
 				uint16 ilc = (ch->chunkPos & 0xFF);
@@ -115,7 +116,7 @@ void Mixer::mix(int8 *buf, int len) {
 				int8 b2 = *(int8 *)(ch->chunk.data + p2);
 				int8 b = (int8)((b1 * (0xFF - ilc) + b2 * ilc) >> 8);
 				// set volume and clamp
-				*pBuf = addclamp(*pBuf, (int)b * ch->volume / 0x40);
+				*pBuf = addclamp(*pBuf, (int)b * _stub->_delta * ch->volume / 0x40);
 			}
 		}
 	}

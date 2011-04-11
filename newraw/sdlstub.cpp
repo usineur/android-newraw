@@ -100,6 +100,7 @@ void SDLStub::init(const char *title) {
 	}
 	_fullscreen = false;
 	_scaler = 0;
+	_delta = 64;
 	prepareGfxMode();
 }
 
@@ -201,6 +202,14 @@ void SDLStub::processEvents() {
 				break;
 			} else if (ev.key.keysym.sym == SDLK_KP_MINUS) {
 				_pi.stateSlot = -1;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_PLUS) {
+				_delta += 16;
+				break;
+			} else if (ev.key.keysym.sym == SDLK_MINUS) {
+				_delta -= 16;
+				if (_delta < 0)
+					_delta = 0;
 				break;
 			}
 			_pi.lastChar = ev.key.keysym.sym;

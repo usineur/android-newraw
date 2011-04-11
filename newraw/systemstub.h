@@ -45,6 +45,7 @@ struct SystemStub {
 	typedef uint32 (*TimerCallback)(uint32 delay, void *param);
 	
 	PlayerInput _pi;
+	int _delta;
 
 	virtual ~SystemStub() {}
 
