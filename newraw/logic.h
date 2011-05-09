@@ -19,6 +19,7 @@
 #ifndef __LOGIC_H__
 #define __LOGIC_H__
 
+#include <time.h>
 #include "intern.h"
 
 struct Mixer;

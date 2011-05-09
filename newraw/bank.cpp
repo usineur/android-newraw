@@ -32,14 +32,11 @@ bool Bank::read(const MemEntry *me, uint8 *buf) {
 	File f;
 	if (f.open(bankName, _dataDir)) {
 		f.seek(me->bankPos);
+		f.read(buf, me->packedSize);
 		if (me->packedSize == me->unpackedSize) {
-			f.read(buf, me->packedSize);
 			ret = true;
 		} else {
-			f.read(buf, me->packedSize);
-			_startBuf = buf;
-			_iBuf = buf + me->packedSize - 4;
-			ret = unpack();
+			ret = unpack(_oBuf, buf, me->packedSize);
 		}
 	} else {
 		error("Bank::read() unable to open '%s'", bankName);
@@ -47,87 +44,87 @@ bool Bank::read(const MemEntry *me, uint8 *buf) {
 	return ret;
 }
 
-void Bank::decUnk1(uint8 numChunks, uint8 addCount) {
-	uint16 count = getCode(numChunks) + addCount + 1;
-	debug(DBG_BANK, "Bank::decUnk1(%d, %d) count=%d", numChunks, addCount, count);
-	_unpCtx.datasize -= count;
-	while (count--) {
-		assert(_oBuf >= _iBuf && _oBuf >= _startBuf);
-		*_oBuf = (uint8)getCode(8);
-		--_oBuf;
+int Bank::rcr(UnpackCtx *uc, int CF) {
+	int rCF = (uc->chk & 1);
+	uc->chk >>= 1;
+	if (CF) {
+		uc->chk |= 0x80000000;
 	}
+	return rCF;
 }
 
-void Bank::decUnk2(uint8 numChunks) {
-	uint16 i = getCode(numChunks);
-	uint16 count = _unpCtx.size + 1;
-	debug(DBG_BANK, "Bank::decUnk2(%d) i=%d count=%d", numChunks, i, count);
-	_unpCtx.datasize -= count;
-	while (count--) {
-		assert(_oBuf >= _iBuf && _oBuf >= _startBuf);
-		*_oBuf = *(_oBuf + i);
-		--_oBuf;
+int Bank::next_chunk(UnpackCtx *uc) {
+	int CF = rcr(uc, 0);
+	if (uc->chk > 0x80000000) {
+		uc->chk %= 0x80000000;
 	}
-}
-
-bool Bank::unpack() {
-	_unpCtx.size = 0;
-	_unpCtx.datasize = READ_BE_UINT32(_iBuf); _iBuf -= 4;
-	_oBuf = _startBuf + _unpCtx.datasize - 1;
-	_unpCtx.crc = READ_BE_UINT32(_iBuf); _iBuf -= 4;
-	_unpCtx.chk = READ_BE_UINT32(_iBuf); _iBuf -= 4;
-	_unpCtx.crc ^= _unpCtx.chk;
-	do {
-		if (!nextChunk()) {
-			_unpCtx.size = 1;
-			if (!nextChunk()) {
-				decUnk1(3, 0);
-			} else {
-				decUnk2(8);
-			}
-		} else {
-			uint16 c = getCode(2);
-			if (c == 3) {
-				decUnk1(8, 8);
-			} else {
-				if (c < 2) {
-					_unpCtx.size = c + 2;
-					decUnk2(c + 9);
-				} else {
-					_unpCtx.size = getCode(8);
-					decUnk2(12);
-				}
-			}
-		}
-	} while (_unpCtx.datasize > 0);
-	return (_unpCtx.crc == 0);
-}
-
-uint16 Bank::getCode(uint8 numChunks) {
-	uint16 c = 0;
-	while (numChunks--) {
-		c <<= 1;
-		if (nextChunk()) {
-			c |= 1;
-		}			
-	}
-	return c;
-}
-
-bool Bank::nextChunk() {
-	bool CF = rcr(false);
-	if (_unpCtx.chk == 0) {
-		assert(_iBuf >= _startBuf);
-		_unpCtx.chk = READ_BE_UINT32(_iBuf); _iBuf -= 4;
-		_unpCtx.crc ^= _unpCtx.chk;
-		CF = rcr(true);
+	if (uc->chk == 0) {
+		uc->chk = READ_BE_UINT32(uc->src); uc->src -= 4;
+		uc->crc ^= uc->chk;
+		CF = rcr(uc, 1);
 	}
 	return CF;
 }
 
-bool Bank::rcr(bool CF) {
-	bool rCF = (_unpCtx.chk & 1);
-	_unpCtx.chk >>= 1;
-	if (CF) _unpCtx.chk |= 0x80000000;
-	return rCF;
+uint16 Bank::get_code(UnpackCtx *uc, uint8 num_chunks) {
+	uint16 c = 0;
+	while (num_chunks--) {
+		c <<= 1;
+		if (next_chunk(uc)) {
+			c |= 1;
+		}
+	}
+	return c;
+}
+
+void Bank::dec_unk1(UnpackCtx *uc, uint8 num_chunks, uint8 add_count) {
+	uint16 count = get_code(uc, num_chunks) + add_count + 1;
+	uc->datasize -= count;
+	while (count--) {
+		*uc->dst = (uint8)get_code(uc, 8);
+		--uc->dst;
+	}
+}
+
+void Bank::dec_unk2(UnpackCtx *uc, uint8 num_chunks) {
+	uint16 i = get_code(uc, num_chunks);
+	uint16 count = uc->size + 1;
+	uc->datasize -= count;
+	while (count--) {
+		*uc->dst = *(uc->dst + i);
+		--uc->dst;
+	}
+}
+
+bool Bank::unpack(uint8 *dst, uint8 *src, int len) {
+	UnpackCtx uc;
+	uc.src = src + len - 4;
+	uc.datasize = READ_BE_UINT32(uc.src); uc.src -= 4;
+	uc.dst = src + uc.datasize - 1;
+	uc.size = 0;
+	uc.crc = READ_BE_UINT32(uc.src); uc.src -= 4;
+	uc.chk = READ_BE_UINT32(uc.src); uc.src -= 4;
+	uc.crc ^= uc.chk;
+	do {
+		if (!next_chunk(&uc)) {
+			uc.size = 1;
+			if (!next_chunk(&uc)) {
+				dec_unk1(&uc, 3, 0);
+			} else {
+				dec_unk2(&uc, 8);
+			}
+		} else {
+			uint16 c = get_code(&uc, 2);
+			if (c == 3) {
+				dec_unk1(&uc, 8, 8);
+			} else if (c < 2) {
+				uc.size = c + 2;
+				dec_unk2(&uc, c + 9);
+			} else {
+				uc.size = get_code(&uc, 8);
+				dec_unk2(&uc, 12);
+			}
+		}
+	} while (uc.datasize > 0);
+	return uc.crc == 0;
 }

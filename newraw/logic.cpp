@@ -454,7 +454,7 @@ void Logic::inp_updatePlayer() {
 	_stub->processEvents();
 	if (_res->_curPtrsId == 0x3E89) {
 		char c = _stub->_pi.lastChar;
-		if (c == 8 | /*c == 0xD |*/ c == 0 | (c >= 'a' && c <= 'z')) {
+		if ((c == 8) | /*c == 0xD |*/ (c == 0) | (c >= 'a' && c <= 'z')) {
 			_scriptVars[VAR_LAST_KEYCHAR] = c & ~0x20;
 			_stub->_pi.lastChar = 0;
 		}

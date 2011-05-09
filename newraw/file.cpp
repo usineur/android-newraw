@@ -16,13 +16,16 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
+#ifdef USE_ZLIB
 #include "zlib.h"
+#endif
 #include "file.h"
 
 
 struct File_impl {
 	bool _ioErr;
 	File_impl() : _ioErr(false) {}
+	virtual ~File_impl() {}
 	virtual bool open(const char *path, const char *mode) = 0;
 	virtual void close() = 0;
 	virtual void seek(int32 off) = 0;
@@ -36,7 +39,7 @@ struct stdFile : File_impl {
 	bool open(const char *path, const char *mode) {
 		_ioErr = false;
 		_fp = fopen(path, mode);
-		return (_fp != NULL);
+		return (_fp != 0);
 	}
 	void close() {
 		if (_fp) {
@@ -67,13 +70,14 @@ struct stdFile : File_impl {
 	}
 };
 
+#ifdef USE_ZLIB
 struct zlibFile : File_impl {
 	gzFile _fp;
 	zlibFile() : _fp(0) {}
 	bool open(const char *path, const char *mode) {
 		_ioErr = false;
 		_fp = gzopen(path, mode);
-		return (_fp != NULL);
+		return (_fp != 0);
 	}
 	void close() {
 		if (_fp) {
@@ -103,18 +107,25 @@ struct zlibFile : File_impl {
 		}
 	}
 };
+#endif
 
 File::File(bool gzipped) {
 	if (gzipped) {
+#ifdef USE_ZLIB
 		_impl = new zlibFile;
+#else
+		_impl = new stdFile;
+#endif
 	} else {
 		_impl = new stdFile;
 	}
 }
 
 File::~File() {
-	_impl->close();
-	delete _impl;
+	if (_impl) {
+		_impl->close();
+		delete _impl;
+	}
 }
 
 bool File::open(const char *filename, const char *directory, const char *mode) {	
@@ -132,7 +143,9 @@ bool File::open(const char *filename, const char *directory, const char *mode) {
 }
 
 void File::close() {
-	_impl->close();
+	if (_impl) {
+		_impl->close();
+	}
 }
 
 bool File::ioErr() const {

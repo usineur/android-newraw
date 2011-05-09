@@ -19,10 +19,15 @@
 #ifndef __INTERN_H__
 #define __INTERN_H__
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
 #include <cassert>
+#include <stdint.h>
 
 #include "sys.h"
 #include "util.h"
