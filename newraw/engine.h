@@ -52,6 +52,7 @@ struct Engine {
 	void makeGameStateName(uint8 slot, char *buf);
 	void saveGameState(uint8 slot, const char *desc);
 	void loadGameState(uint8 slot);
+	void bypassProtection();
 };
 
 #endif

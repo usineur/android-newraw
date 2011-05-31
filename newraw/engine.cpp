@@ -31,6 +31,9 @@ void Engine::run() {
 	_stub->init("Out Of This World");
 	setup();
 	_log.restartAt(0x3E80); // demo starts at 0x3E81
+#ifdef BYPASS_PROTECTION
+	bypassProtection();
+#endif
 	while (!_stub->_pi.quit) {
 		_log.setupScripts();
 		_log.inp_updatePlayer();
@@ -145,4 +148,19 @@ void Engine::loadGameState(uint8 slot) {
 			debug(DBG_INFO, "Loaded state from slot %d", _stateSlot);
 		}
 	}
+}
+
+void Engine::bypassProtection() {
+	File f(true);
+	if (!f.open("bank0e", _dataDir, "rb")) {
+		warning("Unable to bypass protection: add bank0e file to datadir");
+	} else {
+		Serializer s(&f, Serializer::SM_LOAD, _res._memPtrStart, 2);
+		_log.saveOrLoad(s);
+		_res.saveOrLoad(s);
+		_vid.saveOrLoad(s);
+		_ply.saveOrLoad(s);
+		_mix.saveOrLoad(s);
+	}
+	f.close();
 }

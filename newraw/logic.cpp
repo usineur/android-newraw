@@ -128,18 +128,6 @@ void Logic::op_jnz() {
 }
 
 void Logic::op_condJmp() {
-#ifdef BYPASS_PROTECTION
-	if (_res->_curPtrsId == 0x3E80 && _scriptPtr.pc == _res->_segCode + 0xCB9) {
-		// (0x0CB8) condJmp(0x80, VAR(41), VAR(30), 0xCD3)
-		*(_scriptPtr.pc + 0x00) = 0x81;
-		*(_scriptPtr.pc + 0x03) = 0x0D;
-		*(_scriptPtr.pc + 0x04) = 0x24;
-		// (0x0D4E) condJmp(0x4, VAR(50), 6, 0xDBC)		
-		*(_scriptPtr.pc + 0x99) = 0x0D;
-		*(_scriptPtr.pc + 0x9A) = 0x5A;
-		warning("Logic::op_condJmp() bypassing protection");
-	}
-#endif
 	uint8 op = _scriptPtr.fetchByte();
 	int16 b = _scriptVars[_scriptPtr.fetchByte()];
 	uint8 c = _scriptPtr.fetchByte();	
