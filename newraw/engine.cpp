@@ -155,6 +155,8 @@ void Engine::bypassProtection() {
 	if (!f.open("bank0e", _dataDir, "rb")) {
 		warning("Unable to bypass protection: add bank0e file to datadir");
 	} else {
+		_ply.stop();
+		_mix.stopAll();
 		Serializer s(&f, Serializer::SM_LOAD, _res._memPtrStart, 2);
 		_log.saveOrLoad(s);
 		_res.saveOrLoad(s);
